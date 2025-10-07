@@ -1,0 +1,124 @@
+{% extends 'inventory/base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <!-- Metric Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white shadow-sm" style="background: linear-gradient(135deg, #1cc88a, #17a673);">
+                <div class="card-body">
+                    <h5 class="card-title">In Stock</h5>
+                    <h2 class="card-text" id="in-stock">{{ in_stock_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white shadow-sm" style="background: linear-gradient(135deg, #f6c23e, #dda20a);">
+                <div class="card-body">
+                    <h5 class="card-title">Low Stock</h5>
+                    <h2 class="card-text" id="low-stock">{{ low_stock_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white shadow-sm" style="background: linear-gradient(135deg, #e74a3b, #be2617);">
+                <div class="card-body">
+                    <h5 class="card-title">Out of Stock</h5>
+                    <h2 class="card-text" id="out-stock">{{ out_of_stock_count }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row">
+        <div class="col-md-8 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Top 10 Materials</h5>
+                    <div id="material-chart"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Materials by Category</h5>
+                    <div id="category-chart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Top Suppliers by Material Count</h5>
+                    <div id="suppliers-chart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+$(document).ready(function() {
+    // ----------- Top 10 Materials Chart -----------
+    var materialData = [];
+    var materialLabels = [];
+    {% for material, quantity in top_material_counts.items %}
+        materialLabels.push("{{ material }}");
+        materialData.push({{ quantity }});
+    {% endfor %}
+
+    var stockOptions = {
+        chart: { type: 'bar', height: 335, toolbar: { show: false } },
+        series: [{ name: 'Quantity', data: materialData }],
+        xaxis: { categories: materialLabels },
+        colors: ['#4e73df', '#36b9cc', '#1cc88a', '#f6c23e', '#e74a3b'],
+        plotOptions: { bar: { borderRadius: 8, columnWidth: '45%' } },
+        dataLabels: { enabled: false },
+        fill: { type: 'gradient' }
+    };
+    new ApexCharts($('#material-chart')[0], stockOptions).render();
+
+    // ----------- Category Chart -----------
+    var categoryData = [];
+    var categoryLabels = [];
+    {% for category, count in category_counts.items %}
+        categoryLabels.push("{{ category }}");
+        categoryData.push({{ count }});
+    {% endfor %}
+
+    var categoryOptions = {
+        chart: { type: 'donut', height: 350 },
+        series: categoryData,
+        labels: categoryLabels,
+        colors: ['#36b9cc','#4e73df','#1cc88a','#f6c23e','#e74a3b'],
+        legend: { position: 'bottom' },
+        dataLabels: { style: { fontSize: '14px' } },
+        responsive: [{ breakpoint: 480, options: { chart: { width: 280 } } }]
+    };
+    new ApexCharts($('#category-chart')[0], categoryOptions).render();
+
+    // ----------- Supplier Chart -----------
+    var supplierData = [];
+    var supplierLabels = [];
+    {% for supplier, count in supplier_counts.items %}
+        supplierLabels.push("{{ supplier }}");
+        supplierData.push({{ count }});
+    {% endfor %}
+
+    var supplierOptions = {
+        chart: { type: 'bar', height: 350, toolbar: { show: false } },
+        series: [{ name: 'Materials', data: supplierData }],
+        xaxis: { categories: supplierLabels },
+        colors: ['#6f42c1'], // purple accent for suppliers
+        plotOptions: { bar: { borderRadius: 6, horizontal: true } },
+        dataLabels: { enabled: true }
+    };
+    new ApexCharts($('#suppliers-chart')[0], supplierOptions).render();
+});
+</script>
+{% endblock %}
