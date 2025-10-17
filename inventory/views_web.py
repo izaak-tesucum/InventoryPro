@@ -3,7 +3,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from .forms import SupplierForm, MaterialForm
 from django.db.models import Sum
-from .models import Material
+from .models import Material, MaterialCategory
+
 
 def material_list(request):
     materials = Material.objects.all()
@@ -85,9 +86,12 @@ def dashboard(request):
     top_materials_dict = {m.name:m.quantity for m in top_materials}
 
     # Category counts
-    category_counts = Material.objects.values('category').annotate(sum=Sum('quantity')).order_by('-sum')
-    category_dict = {c['category']: c['sum'] for c in category_counts}
+    category_counts = MaterialCategory.objects.annotate(
+        sum=Sum('materials__quantity')
+    ).order_by('-sum')
 
+    category_dict = {c.name: c.sum for c in category_counts}
+    
     # Top suppliers
     supplier_counts = Material.objects.values('supplier__name').annotate(sum=Sum('quantity')).order_by('-sum')
     supplier_dict = {s['supplier__name'] if s['supplier__name'] else 'Unknown': s['sum'] for s in
